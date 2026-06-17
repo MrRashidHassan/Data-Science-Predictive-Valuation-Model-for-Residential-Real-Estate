@@ -1,0 +1,8 @@
+# Initialize the repository
+git init
+
+# Stage only the requirements file
+git add requirements.txt
+
+# Commit it
+git commit -m "Chore: Initialize repository and add requirements.txt"
