@@ -1,0 +1,4 @@
+cols_to_drop = ['PoolQC', 'MiscFeature', 'Alley', 'Fence', 'Id']
+df = df.drop(columns=cols_to_drop, errors='ignore')
+
+I dropped columns like Pool Quality and Fence because over 80% of their data points were missing. Keeping them would introduce noise rather than predictive value. I also dropped the Id column because it is just an arbitrary sequential number and has no relationship with the property price.
