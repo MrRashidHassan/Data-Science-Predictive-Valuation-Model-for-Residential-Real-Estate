@@ -1,0 +1,5 @@
+none_impute_cols = ['GarageType', 'GarageFinish', 'GarageQual', ...]
+for col in none_impute_cols:
+    df[col] = df[col].fillna('None')
+
+In this dataset, a missing value doesn't always mean missing data; it often means the feature doesn't exist. For example, if GarageQual is null, it means the house simply does not have a garage. I replaced those specific nulls with the string 'None' to explicitly tell our model that the asset is absent.
