@@ -1,0 +1,5 @@
+qual_mapping = {'Ex': 5, 'Gd': 4, 'TA': 3, 'Fa': 2, 'Po': 1, 'None': 0}
+df[col] = df[col].map(qual_mapping)
+
+df_final = pd.get_dummies(df, columns=remaining_cats, drop_first=True)
+"Machine learning models only understand math, so text must be converted to numbers. For ordinal variables (like quality ratings where 'Excellent' is clearly better than 'Fair'), I mapped them directly to numerical scales from 0 to 5. For nominal variables without a natural rank (like Neighborhood), I used One-Hot Encoding (pd.get_dummies), creating separate 1 or 0 binary columns for each category so the algorithm can process them mathematically without assuming an artificial order."
