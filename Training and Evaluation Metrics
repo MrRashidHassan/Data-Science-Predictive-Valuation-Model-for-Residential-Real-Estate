@@ -1,0 +1,3 @@
+r2_score(y_test, y_pred_xgb)
+np.sqrt(mean_squared_error(y_test, y_pred_xgb))
+"I trained two architectures: a baseline Multiple Linear Regression and an advanced XGBoost Regressor. To evaluate them, I calculated the $R^2$ score (which tells us what percentage of price variance our features explain) and the RMSE (which tells us the standard deviation of our errors). My XGBoost outperformed the linear baseline significantly because it is a non-linear ensemble method capable of learning complex interaction effects between features, like how the value of a basement changes depending on the specific neighborhood it belongs to."
