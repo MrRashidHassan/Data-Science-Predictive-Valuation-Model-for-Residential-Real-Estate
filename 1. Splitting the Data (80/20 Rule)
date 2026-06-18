@@ -1,0 +1,2 @@
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+"I split the dataset into an 80% training set to teach the models and a 20% validation testing set. This ensures I can test how well the models perform on completely unseen property data to check for overfitting. I set random_state=42 to guarantee that my splits remain identical every time the code runs, making my experiments reproducible."
