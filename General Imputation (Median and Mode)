@@ -1,0 +1,5 @@
+for col in df.columns:
+    if df[col].dtype in [np.int64, np.float64]:
+        df[col] = df[col].fillna(df[col].median())
+    else:
+        df[col] = df[col].fillna(df[col].mode()[0])
