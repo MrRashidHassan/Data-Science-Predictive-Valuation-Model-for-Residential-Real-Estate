@@ -1,0 +1,2 @@
+df['Log_SalePrice'] = np.log(df['SalePrice'])
+"Real estate prices are naturally right-skewed because a few multi-million dollar homes create a long tail. Machine learning models perform better when data is normally distributed. By applying a natural logarithm transformation (np.log), I compressed this tail, stabilized the variance, and ensured that the model evaluates errors proportionally (as percentages rather than absolute dollars)."
