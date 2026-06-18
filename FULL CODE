@@ -1,0 +1,98 @@
+import pandas as pd 
+"for handling tebular dataset"
+import numpy as np 
+"for mathematical ops."
+import warnings 
+from sklearn.model_selection import train_test_split
+"I use train_test_split to divide my data for validation."
+from sklearn.linear_model import LinearRegression 
+"I import it as my baseline benchmark"
+from sklearn.metrics import r2_score, mean_squared_error
+import xgboost as xgb
+"for my advanced machine learning model."
+
+warnings.filterwarnings('ignore') 
+"I used it to keep the final output clean of deprecation notices."
+
+try:
+    df = pd.read_csv('train.csv')
+    print(f"[!] Raw Dataset Successfully Loaded. Base Shape: {df.shape}")
+except FileNotFoundError:
+    raise FileNotFoundError("Could not find 'train.csv'. In  project directory.")
+
+total_missing = df.isnull().sum()
+print("\n--- Summary of Highly Uncleaned Columns (Null Values Count) ---")
+print(total_missing[total_missing > 0].sort_values(ascending=False).head(10))
+
+cols_to_drop = ['PoolQC', 'MiscFeature', 'Alley', 'Fence', 'Id']
+df = df.drop(columns=cols_to_drop, errors='ignore')
+
+"I dropped columns like Pool Quality and Fence because over 80% of their data points were missing. Keeping them would introduce noise rather than predictive value. I also dropped the Id column because it is just an arbitrary sequential number and has no relationship with the property price"
+
+none_impute_cols = ['GarageType', 'GarageFinish', 'GarageQual', 'GarageCond', 
+                    'BsmtQual', 'BsmtCond', 'BsmtExposure', 'BsmtFinType1', 'BsmtFinType2', 
+                    'FireplaceQu', 'MasVnrType']
+"In this dataset, a missing value doesn't always mean missing data; it often means the feature doesn't exist. For example, if GarageQual is null, it means the house simply does not have a garage. I replaced those specific nulls with the string 'None' to explicitly tell our model that the asset is absent."
+
+for col in none_impute_cols:
+    if col in df.columns:
+        df[col] = df[col].fillna('None')
+
+for col in df.columns:
+    if df[col].dtype in [np.int64, np.float64]:
+        df[col] = df[col].fillna(df[col].median())
+    else:
+        df[col] = df[col].fillna(df[col].mode()[0])
+
+print("\n[+] Missing values imputation phase complete. Remaining Nulls:", df.isnull().sum().sum())
+
+initial_count = len(df)
+df = df[df['GrLivArea'] < 4000]
+print(f"[+] Outlier filtering complete. Removed {initial_count - len(df)} properties.")
+
+qual_mapping = {'Ex': 5, 'Gd': 4, 'TA': 3, 'Fa': 2, 'Po': 1, 'None': 0}
+ordinal_cols = ['ExterQual', 'ExterCond', 'BsmtQual', 'BsmtCond', 'HeatingQC', 'KitchenQual', 'FireplaceQu', 'GarageQual', 'GarageCond']
+
+for col in ordinal_cols:
+    if col in df.columns:
+        df[col] = df[col].map(qual_mapping)
+
+df['Log_SalePrice'] = np.log(df['SalePrice'])
+
+remaining_cats = df.select_dtypes(include=['object', 'category']).columns
+df_final = pd.get_dummies(df, columns=remaining_cats, drop_first=True)
+
+X = df_final.drop(columns=['SalePrice', 'Log_SalePrice'], errors='ignore')
+y = df_final['Log_SalePrice']
+print(f"[+] Post-cleaning layout fixed. Total feature columns dimensions: {X.shape[1]}")
+
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+linear_regressor = LinearRegression()
+linear_regressor.fit(X_train, y_train)
+y_pred_lr = linear_regressor.predict(X_test)
+
+xgboost_regressor = xgb.XGBRegressor(n_estimators=150, learning_rate=0.07, max_depth=4, random_state=42)
+xgboost_regressor.fit(X_train, y_train)
+y_pred_xgb = xgboost_regressor.predict(X_test)
+
+
+print("\n" + "="*60)
+print("             FINAL MODEL PERFORMANCE EVALUATIONS             ")
+print("="*60)
+print(f"Multiple Linear Regression (Baseline Benchmark):")
+print(f" -> Test R² Score (Variance Explained) : {r2_score(y_test, y_pred_lr):.4f}")
+print(f" -> Log Root Mean Squared Error (RMSE) : {np.sqrt(mean_squared_error(y_test, y_pred_lr)):.4f}")
+print("-" * 60)
+print(f"Extreme Gradient Boosting (XGBoost Selected Model):")
+print(f" -> Test R² Score (Variance Explained) : {r2_score(y_test, y_pred_xgb):.4f}")
+print(f" -> Log Root Mean Squared Error (RMSE) : {np.sqrt(mean_squared_error(y_test, y_pred_xgb)):.4f}")
+print("="*60)
+
+importances = xgboost_regressor.feature_importances_
+feature_rankings = pd.Series(importances, index=X.columns).sort_values(ascending=False)
+print("\n--- Top 5 Most Operationally Important Pricing Drivers (XGBoost) ---")
+for idx, (feat, val) in enumerate(feature_rankings.head(5).items(), 1):
+    print(f" {idx}. {feat:<15} : {val*100:.2f}% relative influence")
+print("="*60)
